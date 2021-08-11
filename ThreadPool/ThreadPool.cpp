@@ -27,28 +27,28 @@ ThreadPool::ThreadPool(size_t threads)
     }    
 }
 
-template<class F, class... Args>
-auto ThreadPool::commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
-    using RetType = decltype(f(args...));
-    auto task = std::make_shared<std::packaged_task<RetType()>>(
-        std::bind(std::forward<F>(f), std::forward<Args>(args)...)
-    );  // 把函数入口和参数打包（绑定）
+// template<class F, class... Args>
+// auto ThreadPool::commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+//     using RetType = decltype(f(args...));
+//     auto task = std::make_shared<std::packaged_task<RetType()>>(
+//         std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+//     );  // 把函数入口和参数打包（绑定）
 
-    std::future<RetType> future = task->get_future();
+//     std::future<RetType> future = task->get_future();
 
-    std::unique_lock<std::mutex> lock(m_taskMtx);
-    if (!m_run) {
-        throw std::runtime_error("commit on stopped ThreadPool.");
-    }
-    m_tasks.emplace([task](){
-        (*task)();
-    });
-    lock.unlock();
+//     std::unique_lock<std::mutex> lock(m_taskMtx);
+//     if (!m_run) {
+//         throw std::runtime_error("commit on stopped ThreadPool.");
+//     }
+//     m_tasks.emplace([task](){
+//         (*task)();
+//     });
+//     lock.unlock();
 
-    m_taskCond.notify_one();
+//     m_taskCond.notify_one();
 
-    return future;
-}
+//     return future;
+// }
 
 ThreadPool::~ThreadPool() {
     std::unique_lock<std::mutex> lock(m_taskMtx);
